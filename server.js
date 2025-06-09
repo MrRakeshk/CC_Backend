@@ -39,3 +39,17 @@ initRouter(app);
 app.listen(port, () => {
   console.log(`Server started on port ${port}!`);
 });
+
+const corsOptions = {
+  origin: 'https://cc-frontend-dusky.vercel.app', // your frontend URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true, // if you use cookies or auth tokens
+};
+
+app.use(cors(corsOptions));
+
+// Handle preflight OPTIONS requests for all routes
+app.options('*', cors(corsOptions));
+
+// ... your existing middleware, routes, and server start code

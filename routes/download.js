@@ -9,8 +9,11 @@ const router = express.Router();
 router.get("/resume/:id", async (req, res) => {
   const id = req.params.id;
 
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid applicant ID" });
+  }
+
   try {
-    // Find applicant by MongoDB _id
     const applicant = await ApplicantSchema.findById(id);
 
     if (!applicant) {
@@ -23,17 +26,15 @@ router.get("/resume/:id", async (req, res) => {
       return res.status(404).json({ message: "Resume not found for this applicant" });
     }
 
-    // Construct full path to the file (matches your upload folder)
     const filePath = path.join(__dirname, "../files", resumeFile);
+    console.log("Serving resume file from:", filePath);
 
-    // Check if file exists and is accessible
     fs.access(filePath, fs.constants.F_OK, (err) => {
       if (err) {
         console.error("File access error:", err);
         return res.status(404).json({ message: "Resume file not found" });
       }
 
-      // Send the file for download
       res.download(filePath, (err) => {
         if (err) {
           console.error("Error during file download:", err);

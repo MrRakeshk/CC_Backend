@@ -17,20 +17,22 @@ cloudinary.config({
 // 📦 Setup Cloudinary Storage for PDF uploads
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: async (req, file) => {
-    return {
-      folder: "resumes",
-      resource_type: "raw", // required for non-image files like PDFs
-      public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
-      format: "pdf", // explicitly set PDF format
-    };
-  },
+  params: async (req, file) => ({
+    folder: "resumes",
+    resource_type: "raw", // for PDFs and other non-image types
+    public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
+    format: "pdf",
+    // 👇 this is important to make URL public:
+    use_filename: true,
+    unique_filename: false,
+    access_mode: "public", // explicitly set public access mode
+  }),
 });
 
-// 🎯 Set up Multer middleware
+// 🎯 Multer middleware
 const upload = multer({
   storage,
-  fileFilter: function (req, file, cb) {
+  fileFilter: (req, file, cb) => {
     if (file.mimetype !== "application/pdf") {
       return cb(new Error("Only PDF files are allowed"), false);
     }
@@ -46,7 +48,8 @@ router.post("/resume", upload.single("resume"), async (req, res) => {
     return res.status(400).json({ message: "Resume file upload failed" });
   }
 
-  const fileUrl = req.file.path; // ✅ full Cloudinary URL
+  // 🔍 Use `req.file.path` or `req.file.secure_url` to store full URL
+  const fileUrl = req.file.path || req.file.secure_url || req.file.url;
 
   try {
     const applicant = await ApplicantSchema.findOne({ userId: id });

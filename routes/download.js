@@ -1,9 +1,11 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const axios = require("axios");
 const ApplicantSchema = mongoose.model("JobApplicantInfo");
 
 const router = express.Router();
+
+// Replace with your actual Cloudinary cloud name
+const CLOUDINARY_BASE_URL = "https://res.cloudinary.com/dvy6xbobi/raw/upload/resumes/";
 
 router.get("/resume/:id", async (req, res) => {
   const id = req.params.id;
@@ -15,27 +17,22 @@ router.get("/resume/:id", async (req, res) => {
   try {
     const applicant = await ApplicantSchema.findById(id);
 
-    if (!applicant || !applicant.resume) {
-      return res.status(404).json({ message: "Resume not found" });
+    if (!applicant) {
+      return res.status(404).json({ message: "Applicant not found" });
     }
 
-    const resumeUrl = applicant.resume;
+    const resumeFileName = applicant.resume;
 
-    // Fetch file from Cloudinary URL and stream to client
-    const response = await axios({
-      url: resumeUrl,
-      method: "GET",
-      responseType: "stream",
-    });
+    if (!resumeFileName) {
+      return res.status(404).json({ message: "Resume not uploaded yet" });
+    }
 
-    // Set headers to download as attachment
-    res.setHeader("Content-Disposition", `attachment; filename=resume.pdf`);
-    res.setHeader("Content-Type", "application/pdf");
+    const fullResumeUrl = `${CLOUDINARY_BASE_URL}${resumeFileName}`;
 
-    response.data.pipe(res);
+    return res.redirect(fullResumeUrl);
   } catch (error) {
     console.error("Download error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 

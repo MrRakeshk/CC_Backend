@@ -1,6 +1,4 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
 const { default: mongoose } = require("mongoose");
 const ApplicantSchema = mongoose.model("JobApplicantInfo");
 
@@ -20,31 +18,17 @@ router.get("/resume/:id", async (req, res) => {
       return res.status(404).json({ message: "Applicant not found" });
     }
 
-    const resumeFile = applicant.resume;
+    const resumeUrl = applicant.resume;
 
-    if (!resumeFile) {
+    if (!resumeUrl) {
       return res.status(404).json({ message: "Resume not found for this applicant" });
     }
 
-    const filePath = path.join(__dirname, "../files", resumeFile);
-    console.log("Serving resume file from:", filePath);
-
-    fs.access(filePath, fs.constants.F_OK, (err) => {
-      if (err) {
-        console.error("File access error:", err);
-        return res.status(404).json({ message: "Resume file not found" });
-      }
-
-      res.download(filePath, (err) => {
-        if (err) {
-          console.error("Error during file download:", err);
-          return res.status(500).json({ message: "Failed to download resume" });
-        }
-      });
-    });
+    // Redirect client to Cloudinary-hosted file
+    return res.redirect(resumeUrl);
   } catch (error) {
     console.error("Server error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 

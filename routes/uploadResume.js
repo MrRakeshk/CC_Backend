@@ -7,25 +7,29 @@ const ApplicantSchema = mongoose.model("JobApplicantInfo");
 
 const router = express.Router();
 
+// 🌩️ Cloudinary Configuration from .env
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// 📦 Setup Cloudinary Storage for PDF uploads
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: "resumes",             
-    resource_type: "raw",             
-    format: async (req, file) => "pdf", 
-    public_id: (req, file) => `${Date.now()}-${file.originalname.split('.')[0]}`,
+  params: async (req, file) => {
+    return {
+      folder: "resumes",
+      resource_type: "raw", // required for non-image files like PDFs
+      public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
+      format: "pdf", // explicitly set PDF format
+    };
   },
 });
 
-// 📥 Multer Setup
+// 🎯 Set up Multer middleware
 const upload = multer({
-  storage: storage,
+  storage,
   fileFilter: function (req, file, cb) {
     if (file.mimetype !== "application/pdf") {
       return cb(new Error("Only PDF files are allowed"), false);
@@ -34,9 +38,15 @@ const upload = multer({
   },
 });
 
+// 📤 Resume Upload Endpoint
 router.post("/resume", upload.single("resume"), async (req, res) => {
   const id = req.body.userId;
-  const fileUrl = req.file.path; // Cloudinary file URL
+
+  if (!req.file || !req.file.path) {
+    return res.status(400).json({ message: "Resume file upload failed" });
+  }
+
+  const fileUrl = req.file.path; // ✅ full Cloudinary URL
 
   try {
     const applicant = await ApplicantSchema.findOne({ userId: id });
@@ -45,7 +55,7 @@ router.post("/resume", upload.single("resume"), async (req, res) => {
       return res.status(404).json({ message: "User does not exist" });
     }
 
-    applicant.resume = fileUrl; // Save URL to MongoDB
+    applicant.resume = fileUrl;
     await applicant.save();
 
     console.log("Uploaded to Cloudinary:", fileUrl);

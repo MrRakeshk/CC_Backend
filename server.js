@@ -23,7 +23,7 @@ app.options("*", cors(corsOptions));
 
 // ✅ MongoDB
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URL)
   .then(() => console.log("Connected to DB"))
   .catch((err) => console.error(err));
 

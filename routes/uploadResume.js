@@ -16,7 +16,7 @@ const upload = multer({
   limits: { fileSize: 1024 * 1024 * 5 }, // 5MB
 });
 
-router.post("/resume", upload.single("resume"), async (req, res) => {
+router.post("/resume", upload.single("file"), async (req, res) => {
   const { file } = req;
 
   if (!file) {

@@ -35,7 +35,7 @@ router.post("/resume", upload.single("file"), async (req, res) => {
     await pipeline(file.stream, fs.createWriteStream(filepath));
     res.status(200).json({
       message: "Resume uploaded successfully",
-      url: `/host/resumes/${filename}`,
+      url: `/host/resume/${filename}`,
     });
   } catch (err) {
     res.status(500).json({ message: "Error while uploading", error: err.message });

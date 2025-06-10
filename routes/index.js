@@ -5,7 +5,7 @@ const applicationRouter = require("./applications");
 const ratingRouter = require("./rating");
 const uploadImageRouter = require("./uploadImage");
 const uploadResumeRouter = require("./uploadResume");
-const downloadResumeRouter = require("./downloadResume");
+const downloadResumeRouter = require("./download");
 const applicantRouter = require("./applicant");
 
 const initRouter = (app) => {

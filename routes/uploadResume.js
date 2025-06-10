@@ -1,26 +1,34 @@
-const multer = require("multer");
 const express = require("express");
-const path = require("path");
-const { default: mongoose } = require("mongoose");
+const multer = require("multer");
+const { v2: cloudinary } = require("cloudinary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const mongoose = require("mongoose");
 const ApplicantSchema = mongoose.model("JobApplicantInfo");
+
 const router = express.Router();
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./files");
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname); // get original extension
-    cb(null, file.fieldname + "-" + uniqueSuffix + ext);
+// 🔧 Configure Cloudinary
+cloudinary.config({
+  cloud_name: "dvy6xbobi",      
+  api_key: "857467186459813",             
+  api_secret: "CRFV1KnVtaTHCnmmzgiqrCg5V0c",       
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "resumes",             
+    resource_type: "raw",             
+    format: async (req, file) => "pdf", 
+    public_id: (req, file) => `${Date.now()}-${file.originalname.split('.')[0]}`,
   },
 });
 
+// 📥 Multer Setup
 const upload = multer({
   storage: storage,
   fileFilter: function (req, file, cb) {
-    const ext = path.extname(file.originalname);
-    if (ext !== ".pdf") {
+    if (file.mimetype !== "application/pdf") {
       return cb(new Error("Only PDF files are allowed"), false);
     }
     cb(null, true);
@@ -28,21 +36,21 @@ const upload = multer({
 });
 
 router.post("/resume", upload.single("resume"), async (req, res) => {
-  const fileName = req.file.filename;
   const id = req.body.userId;
+  const fileUrl = req.file.path; // Cloudinary file URL
 
   try {
     const applicant = await ApplicantSchema.findOne({ userId: id });
+
     if (!applicant) {
       return res.status(404).json({ message: "User does not exist" });
     }
 
-    applicant.resume = fileName;
+    applicant.resume = fileUrl; // Save URL to MongoDB
     await applicant.save();
 
-    console.log("Uploaded file:", fileName);
-
-    res.status(200).json({ message: "Upload successful", fileName });
+    console.log("Uploaded to Cloudinary:", fileUrl);
+    res.status(200).json({ message: "Upload successful", fileUrl });
   } catch (error) {
     console.error("Upload error:", error);
     res.status(500).json({ message: "Internal server error" });

@@ -24,10 +24,10 @@ router.get("/resume/:id", async (req, res) => {
       return res.status(404).json({ message: "Resume not found for this applicant" });
     }
 
-    // Redirect client to Cloudinary-hosted file
+    // Redirect to Cloudinary URL
     return res.redirect(resumeUrl);
   } catch (error) {
-    console.error("Server error:", error);
+    console.error("Download error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 });

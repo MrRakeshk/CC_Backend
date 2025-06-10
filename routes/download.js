@@ -1,6 +1,6 @@
 const express = require("express");
 const { default: mongoose } = require("mongoose");
-const ApplicantSchema = mongoose.model("JobApplicantInfo");
+const ApplicantSchema = mongoose.model("jobApplicant.js");
 
 const router = express.Router();
 

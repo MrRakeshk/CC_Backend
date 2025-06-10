@@ -29,7 +29,7 @@ router.post("/resume", upload.single("file"), async (req, res) => {
   }
 
   const filename = `${uuidv4()}.pdf`;
-  const filepath = path.join(__dirname, "../public/resumes", filename);
+  const filepath = path.join(__dirname, "../public/resume", filename);
 
   try {
     await pipeline(file.stream, fs.createWriteStream(filepath));

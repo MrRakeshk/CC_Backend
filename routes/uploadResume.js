@@ -1,70 +1,70 @@
 const express = require("express");
 const multer = require("multer");
 const { v2: cloudinary } = require("cloudinary");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const mongoose = require("mongoose");
-const ApplicantSchema = mongoose.model("JobApplicantInfo");
+const { Readable } = require("stream");
+require("dotenv").config();
 
 const router = express.Router();
 
-// ✅ 1. Configure Cloudinary (make sure .env values are loaded properly)
+// ✅ Cloudinary Configuration
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// ✅ 2. Setup Cloudinary Storage
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: async (req, file) => ({
-    folder: "resumes",
-    resource_type: "raw", // ⚠️ Must be "raw" for non-image files
-    public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
-    format: "pdf",
-  }),
-});
-
-// ✅ 3. Multer Middleware Setup
+// ✅ Multer - memory storage
+const storage = multer.memoryStorage();
 const upload = multer({
-  storage,
+  storage: storage,
+  limits: { fileSize: 1024 * 1024 * 5 }, // 5MB limit
   fileFilter: (req, file, cb) => {
     if (file.mimetype !== "application/pdf") {
-      return cb(new Error("Only PDF files are allowed"));
+      return cb(new Error("Only PDF files are allowed"), false);
     }
     cb(null, true);
   },
 });
 
-// ✅ 4. Resume Upload API
-router.post("/resume", upload.single("resume"), async (req, res) => {
-  const userId = req.body.userId;
+// ✅ POST /api/uploadResume/resume
+router.post("/resume", upload.single("file"), async (req, res) => {
+  const { file } = req;
 
-  if (!req.file) {
-    console.error("No file received");
-    return res.status(400).json({ message: "No resume file received" });
+  if (!file) {
+    return res.status(400).json({ message: "No file uploaded" });
   }
 
-  const fileUrl = req.file.path; // ✅ Always returns the full Cloudinary URL
-
   try {
-    const applicant = await ApplicantSchema.findOne({ userId });
+    const bufferStream = Readable.from(file.buffer);
 
-    if (!applicant) {
-      console.error("Applicant not found for userId:", userId);
-      return res.status(404).json({ message: "User not found" });
-    }
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: "resumes",
+          resource_type: "raw", // 👈 important for non-images
+          public_id: `${Date.now()}-${file.originalname.split(".")[0]}`,
+          format: "pdf",
+          use_filename: true,
+          unique_filename: false,
+          access_mode: "public",
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
 
-    applicant.resume = fileUrl;
-    await applicant.save();
+      bufferStream.pipe(stream);
+    });
 
-    console.log("Resume uploaded successfully:", fileUrl);
-    return res.status(200).json({ message: "Upload successful", fileUrl });
-  } catch (err) {
-    console.error("Upload error:", err);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(200).json({
+      message: "Resume uploaded successfully",
+      url: result.secure_url,
+    });
+  } catch (error) {
+    console.error("Resume Upload Error:", error);
+    res.status(500).json({ message: "Failed to upload resume" });
   }
 });
 
 module.exports = router;
-

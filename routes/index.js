@@ -4,7 +4,7 @@ const jobRouter = require("./job");
 const applicationRouter = require("./applications");
 const ratingRouter = require("./rating");
 const uploadImageRouter = require("./uploadImage");
-const uploadResumeRouter = require("./uploadResume");
+const ResumeRouter = require("./uploadResume");
 const downloadResumeRouter = require("./download");
 const applicantRouter = require("./applicant");
 
@@ -15,7 +15,7 @@ const initRouter = (app) => {
   app.use("/api/applications", applicationRouter);
   app.use("/api/rating", ratingRouter);
   app.use("/api/upload/image", uploadImageRouter);
-  app.use("/api/upload/resume", uploadResumeRouter);
+  app.use("/api/uploadResume/resume", ResumeRouter);
   app.use("/api/download/resume", downloadResumeRouter);
   app.use("/api/applicants", applicantRouter);
 };

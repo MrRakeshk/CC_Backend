@@ -21,9 +21,11 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
-// ✅ MongoDB
+// Connect to MongoDB
 mongoose
-  .connect(process.env.MONGO_URL)
+  .connect(
+    "mongodb+srv://mrrakeshk1704:Rakeshk2003@cluster0.h5n5y.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+  )
   .then(() => console.log("Connected to DB"))
   .catch((err) => console.error(err));
 

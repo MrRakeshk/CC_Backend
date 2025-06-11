@@ -4,7 +4,7 @@ const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 const { promisify } = require("util");
 const path = require("path");
-const User = require("../models/User"); // make sure path is correct
+const User = require("../models/User"); 
 
 const pipeline = promisify(require("stream").pipeline);
 const router = express.Router();

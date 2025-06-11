@@ -26,16 +26,17 @@ router.post("/resume", upload.single("resume"), async (req, res) => {
     return res.status(400).json({ message: "Only PDF files allowed" });
   }
 
-  const filename = ${uuidv4()}.pdf;
+  const filename = `${uuidv4()}.pdf`;
   const filepath = path.join(__dirname, "../public/resume", filename);
 
   try {
     // Write file to disk using file.buffer from memoryStorage
     await fs.promises.writeFile(filepath, file.buffer);
 
+    // Send back a response with the URL
     res.status(200).json({
       message: "Resume uploaded successfully",
-      url: /host/resume/${filename},
+      url: `/host/resume/${filename}`, // Make sure your frontend can access this path
     });
   } catch (err) {
     res.status(500).json({
@@ -46,3 +47,4 @@ router.post("/resume", upload.single("resume"), async (req, res) => {
 });
 
 module.exports = router;
+

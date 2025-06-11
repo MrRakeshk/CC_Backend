@@ -5,6 +5,7 @@ const passport = require("passport");
 require("./middleware/passportConfig"); // register strategies
 const cors = require("cors");
 require("dotenv").config();
+const path = require("path");
 
 const initRouter = require("./routes");
 

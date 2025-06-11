@@ -28,7 +28,7 @@ router.post("/resume", upload.single("resume"), async (req, res) => {
     return res.status(400).json({ message: "Only PDF files allowed" });
   }
 
-  const filename = ${uuidv4()}.pdf;
+  const filename = `${uuidv4()}.pdf`;
   const filepath = path.join(__dirname, "../public/resume", filename);
 
   try {

@@ -1,33 +1,20 @@
 const express = require("express");
 const multer = require("multer");
-const { v2: cloudinary } = require("cloudinary");
-const streamifier = require("streamifier");
+const fs = require("fs");
+const { v4: uuidv4 } = require("uuid");
+const { promisify } = require("util");
+const path = require("path");
+
+const pipeline = promisify(require("stream").pipeline);
 
 const router = express.Router();
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: storage,
   limits: { fileSize: 1024 * 1024 * 5 }, // 5MB
 });
-
-function uploadToCloudinary(buffer) {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { resource_type: "raw", folder: "resumes" },
-      (error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      }
-    );
-    streamifier.createReadStream(buffer).pipe(stream);
-  });
-}
 
 router.post("/resume", upload.single("resume"), async (req, res) => {
   const { file } = req;
@@ -36,18 +23,22 @@ router.post("/resume", upload.single("resume"), async (req, res) => {
     return res.status(400).json({ message: "No file uploaded" });
   }
 
+  // Only allow PDF
   if (file.mimetype !== "application/pdf") {
     return res.status(400).json({ message: "Only PDF files allowed" });
   }
 
+  const filename = ${uuidv4()}.pdf;
+  const filepath = path.join(__dirname, "../public/resume", filename);
+
   try {
-    const result = await uploadToCloudinary(file.buffer);
+    await pipeline(file.stream, fs.createWriteStream(filepath));
     res.status(200).json({
       message: "Resume uploaded successfully",
-      url: result.secure_url,
+      url: /host/resume/${filename},
     });
   } catch (err) {
-    res.status(500).json({ message: "Error uploading to Cloudinary", error: err.message });
+    res.status(500).json({ message: "Error while uploading", error: err.message });
   }
 });
 

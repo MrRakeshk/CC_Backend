@@ -2,44 +2,47 @@ const express = require("express");
 const multer = require("multer");
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
-const { promisify } = require("util");
 const path = require("path");
-
-const pipeline = promisify(require("stream").pipeline);
 
 const router = express.Router();
 
+// Setup multer to use memory storage
 const storage = multer.memoryStorage();
 
 const upload = multer({
-  storage: storage,
-  limits: { fileSize: 1024 * 1024 * 5 }, // 5MB
+  storage: storage,
+  limits: { fileSize: 1024 * 1024 * 5 }, // 5MB max file size
 });
 
 router.post("/resume", upload.single("resume"), async (req, res) => {
-  const { file } = req;
+  const { file } = req;
 
-  if (!file) {
-    return res.status(400).json({ message: "No file uploaded" });
-  }
+  if (!file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
 
-  // Only allow PDF
-  if (file.mimetype !== "application/pdf") {
-    return res.status(400).json({ message: "Only PDF files allowed" });
-  }
+  // Only allow PDF files
+  if (file.mimetype !== "application/pdf") {
+    return res.status(400).json({ message: "Only PDF files allowed" });
+  }
 
-  const filename = `${uuidv4()}.pdf`;
-  const filepath = path.join(__dirname, "../public/resume", filename);
+  const filename = `${uuidv4()}.pdf`;
+  const filepath = path.join(__dirname, "../public/resume", filename);
 
-  try {
-    await pipeline(file.stream, fs.createWriteStream(filepath));
-    res.status(200).json({
-      message: "Resume uploaded successfully",
-      url:`/host/resume/${filename}`,
-    });
-  } catch (err) {
-    res.status(500).json({ message: "Error while uploading", error: err.message });
-  }
+  try {
+    // Write file to disk using file.buffer from memoryStorage
+    await fs.promises.writeFile(filepath, file.buffer);
+
+    res.status(200).json({
+      message: "Resume uploaded successfully",
+      url: `/host/resume/${filename}`,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error while uploading",
+      error: err.message,
+    });
+  }
 });
 
 module.exports = router;

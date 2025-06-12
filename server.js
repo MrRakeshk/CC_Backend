@@ -12,13 +12,13 @@ const initRouter = require("./routes");
 const app = express();
 const port = 5001;
 
-// ✅ CORS
 const corsOptions = {
   origin: "https://cc-frontend-dusky.vercel.app",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
+
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 

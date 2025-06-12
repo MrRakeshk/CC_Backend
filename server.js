@@ -35,8 +35,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(passport.initialize());
-// ✅ Serve static files like resumes and profile images
-app.use('/host', express.static(path.join(__dirname, 'public')));
+
+// ✅ This will expose the /public/resume folder via /host/resume/
+app.use("/host/resume", express.static(path.join(__dirname, "public/resume")));
 // ✅ Routes
 app.get("/", (req, res) => res.send("Welcome to Job Portal API!"));
 initRouter(app);

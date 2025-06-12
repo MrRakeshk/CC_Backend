@@ -41,6 +41,8 @@ app.use("/host/resume", express.static(path.join(__dirname, "public/resume")));
 // ✅ Routes
 app.get("/", (req, res) => res.send("Welcome to Job Portal API!"));
 initRouter(app);
+const resumeRoutes = require("./routes/uploadResume");
+app.use("/api", resumeRoutes); 
 
 // ✅ Global Error Handler
 app.use((err, req, res, next) => {

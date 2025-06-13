@@ -3,7 +3,7 @@ const axios = require("axios");
 const mongoose = require("mongoose");
 
 const router = express.Router();
-const ApplicantSchema = mongoose.model("JobApplicantInfo");
+const ApplicantSchema = mongoose.model("jobApplicantInfo");
 
 router.get("/resume/:applicantId", async (req, res) => {
   try {

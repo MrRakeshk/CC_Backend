@@ -9,16 +9,18 @@ router.get("/resume/:applicantId", async (req, res) => {
   try {
     const applicant = await ApplicantSchema.findById(req.params.applicantId);
 
-    // Accept both resumeUrl and resume
     const resumeUrl = applicant?.resumeUrl || applicant?.resume;
 
     if (!applicant || !resumeUrl) {
       return res.status(404).json({ message: "Resume not found" });
     }
 
-    const cloudinaryUrl = resumeUrl + "?fl_attachment=true";
+    const downloadUrl = resumeUrl.includes("fl_attachment=true")
+      ? resumeUrl
+      : resumeUrl + "?fl_attachment=true";
 
-    const response = await axios.get(cloudinaryUrl, {
+    // 📦 Attempt to stream the file
+    const fileResponse = await axios.get(downloadUrl, {
       responseType: "stream",
     });
 
@@ -28,10 +30,17 @@ router.get("/resume/:applicantId", async (req, res) => {
       `attachment; filename=resume-${applicant.name || "user"}.pdf`
     );
 
-    response.data.pipe(res);
+    fileResponse.data.pipe(res);
   } catch (err) {
-    console.error("Download error:", err.message);
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("🔴 Resume Download Error:", err.message);
+    if (err.response?.status) {
+      console.error("Cloudinary status:", err.response.status);
+      console.error("Cloudinary data:", err.response.data);
+    }
+    res.status(500).json({
+      message: "Server error while downloading resume",
+      error: err.message,
+    });
   }
 });
 

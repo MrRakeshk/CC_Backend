@@ -7,22 +7,28 @@ const ApplicantSchema = mongoose.model("JobApplicantInfo");
 
 router.get("/resume/:applicantId", async (req, res) => {
   try {
+    console.log("⏳ Fetching applicant...");
     const applicant = await ApplicantSchema.findById(req.params.applicantId);
 
-    const resumeUrl = applicant?.resumeUrl || applicant?.resume;
+    if (!applicant) {
+      console.log("❌ Applicant not found");
+      return res.status(404).json({ message: "Applicant not found" });
+    }
 
-    if (!applicant || !resumeUrl) {
+    const resumeUrl = applicant.resumeUrl || applicant.resume;
+
+    if (!resumeUrl) {
+      console.log("❌ Resume URL missing");
       return res.status(404).json({ message: "Resume not found" });
     }
 
     const downloadUrl = resumeUrl.includes("fl_attachment=true")
       ? resumeUrl
-      : resumeUrl + "?fl_attachment=true";
+      : `${resumeUrl}?fl_attachment=true`;
 
-    // 📦 Attempt to stream the file
-    const fileResponse = await axios.get(downloadUrl, {
-      responseType: "stream",
-    });
+    console.log("📡 Downloading from:", downloadUrl);
+
+    const response = await axios.get(downloadUrl, { responseType: "stream" });
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
@@ -30,12 +36,12 @@ router.get("/resume/:applicantId", async (req, res) => {
       `attachment; filename=resume-${applicant.name || "user"}.pdf`
     );
 
-    fileResponse.data.pipe(res);
+    response.data.pipe(res);
   } catch (err) {
-    console.error("🔴 Resume Download Error:", err.message);
-    if (err.response?.status) {
-      console.error("Cloudinary status:", err.response.status);
-      console.error("Cloudinary data:", err.response.data);
+    console.error("🚨 ERROR during resume download:", err.message);
+    if (err.response) {
+      console.error("🌐 Cloudinary Status:", err.response.status);
+      console.error("📄 Cloudinary Response:", err.response.data);
     }
     res.status(500).json({
       message: "Server error while downloading resume",

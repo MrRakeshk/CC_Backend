@@ -1,10 +1,12 @@
 const express = require("express");
+const axios = require("axios");
 const mongoose = require("mongoose");
-const ApplicantSchema = mongoose.model("JobApplicantInfo");
-
+const https = require("https");
 const router = express.Router();
 
-// Download resume by applicant ID
+const ApplicantSchema = mongoose.model("JobApplicantInfo");
+
+// Route: GET /api/download/resume/:applicantId
 router.get("/resume/:applicantId", async (req, res) => {
   try {
     const applicant = await ApplicantSchema.findById(req.params.applicantId);
@@ -13,15 +15,23 @@ router.get("/resume/:applicantId", async (req, res) => {
       return res.status(404).json({ message: "Resume not found" });
     }
 
-    // Force download
-    const downloadUrl = applicant.resumeUrl.includes("cloudinary")
-      ? applicant.resumeUrl + "?fl_attachment=true"
-      : applicant.resumeUrl;
+    const cloudinaryUrl = applicant.resumeUrl + "?fl_attachment=true";
 
-    return res.redirect(downloadUrl);
+    const fileResponse = await axios.get(cloudinaryUrl, {
+      responseType: "stream",
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+    });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=resume-${applicant.name || "user"}.pdf`
+    );
+
+    fileResponse.data.pipe(res);
   } catch (err) {
     console.error("Resume download error:", err);
-    return res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 

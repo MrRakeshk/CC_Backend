@@ -1,24 +1,11 @@
-const nodemailer = require("nodemailer");
-require("dotenv").config();
-
-const sendMail = async ({ email, html, subject }) => {
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.MY_EMAIL,
-      pass: process.env.MY_PASSWORD,
-    },
-  });
-  const info = await transporter.sendMail({
-    from: '"JobPortal" <no-replay@jobportal.com>',
-    to: email,
-    subject: subject,
-    html: html,
-  });
-  return info;
-};
-
-
-module.exports = sendMail;
+await sendMail({
+  email: user.email,
+  subject: "Reset Your Password",
+  html: `
+    <p>You received this email because you (or someone else) requested a password reset.</p>
+    <p><a href="${resetLink}">Click here to reset your password</a></p>
+    <p>This link will expire in 15 minutes.</p>
+    <br>
+    <p>If you didn't request this, you can safely ignore this email.</p>
+  `,
+});

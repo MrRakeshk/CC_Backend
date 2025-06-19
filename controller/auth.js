@@ -253,25 +253,25 @@ const forgotPassword = async (req, res) => {
   if (!user) throw new Error("User not found");
   const resetToken = user.createPasswordChangedToken();
   await user.save();
-  const html = `
-<p style="font-family: Arial, Helvetica, sans-serif; font-weight: 500; font-size: 14px">
-  You received this email because you (or someone else) requested a password reset.
-</p>
-<p style="font-family: Arial, Helvetica, sans-serif; font-weight: 500; font-size: 14px">
-  Click the button below to reset your password. This request will expire in 15 minutes:
-</p>
-<button style="padding: 14px; background-color: #1E90FF; border-radius: 5px; border-style: none; cursor: pointer">
-  <a href=${process.env.CLIENT_URL}/password/reset/${resetToken}
-    style="color:white; text-decoration-line: none; font-size: 14px; font-weight: 700">
-      Reset Password
+const html = `
+  <p style="font-family: Arial, Helvetica, sans-serif; font-weight: 500; font-size: 14px">
+    You received this email because you (or someone else) requested a password reset.
+  </p>
+  <p style="font-family: Arial, Helvetica, sans-serif; font-weight: 500; font-size: 14px">
+    Click the button below to reset your password. This request will expire in 15 minutes:
+  </p>
+  <a href="${process.env.CLIENT_URL}/password/reset/${resetToken}" 
+     style="display: inline-block; padding: 14px; background-color: #1E90FF; border-radius: 5px; color: white; 
+     text-decoration: none; font-size: 14px; font-weight: 700;">
+    Reset Password
   </a>
-</button>
-<p style="font-family: Arial, Helvetica, sans-serif; font-weight: 500; font-size: 14px">
-  If you did not request a password reset, please ignore this email.
-</p>
-<p style="font-family: Arial, Helvetica, sans-serif; font-weight: 900; font-size: 14px">Thank you,</p>
-<p style="font-family: Arial, Helvetica, sans-serif; font-weight: 900; font-size: 14px">JobPortal Support Team</p>
-<img src="https://res.cloudinary.com/dkmkutpxp/image/upload/v1703743129/a4qjcagbhc7juqqjlpir.jpg" style="width: 20rem" alt="thumbnail">
+  <p style="font-family: Arial, Helvetica, sans-serif; font-weight: 500; font-size: 14px">
+    If you did not request a password reset, please ignore this email.
+  </p>
+  <p style="font-family: Arial, Helvetica, sans-serif; font-weight: 900; font-size: 14px">Thank you,</p>
+  <p style="font-family: Arial, Helvetica, sans-serif; font-weight: 900; font-size: 14px">JobPortal Support Team</p>
+  <img src="https://res.cloudinary.com/dkmkutpxp/image/upload/v1703743129/a4qjcagbhc7juqqjlpir.jpg" 
+       style="width: 20rem" alt="thumbnail">
 `;
 
   const data = {

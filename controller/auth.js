@@ -272,7 +272,7 @@ const forgotPassword = async (req, res) => {
 <p style="font-family: Arial, Helvetica, sans-serif; font-weight: 900; font-size: 14px">Thank you,</p>
 <p style="font-family: Arial, Helvetica, sans-serif; font-weight: 900; font-size: 14px">JobPortal Support Team</p>
 <img src="https://res.cloudinary.com/dkmkutpxp/image/upload/v1703743129/a4qjcagbhc7juqqjlpir.jpg" style="width: 20rem" alt="thumbnail">
-
+`;
 
   const data = {
     email,
